@@ -1,0 +1,63 @@
+@baseUri = https://ca-sjkpembedding-qdrant.kindrock-b324fec9.northeurope.azurecontainerapps.io
+@baseUriEmbedding = https://ca-sjkpembedding-embed.kindrock-b324fec9.northeurope.azurecontainerapps.io
+@apiKey = 6e05dbc5-785f-57f2-a1a6-5a219d9e5dda
+
+### create collection 
+
+PUT {{baseUri}}/collections/test
+Content-Type: application/json
+api-key: {{apiKey}}
+
+{
+    "vectors": {
+      "size": 768,
+      "distance": "Cosine"
+    }
+}
+
+
+### Delete collection
+
+DELETE  {{baseUri}}/collections/test
+api-key: {{apiKey}}
+
+### Search for machates 
+POST  {{baseUri}}/collections/test/points/search
+api-key: {{apiKey}}
+
+< embedding.json
+
+### Generate embedding
+
+POST {{baseUriEmbedding}}
+Content-Type: application/json
+
+{
+    "sent": [
+            "All technical managers must have hands-on experience. For example, managers of software teams must spend at least 20% of their time coding. Solar roof managers must spend time on the roofs doing installations. Otherwise, they are like a cavalry leader who can't ride a horse or a general who can't use a sword.",
+            "It's OK to be wrong. Just don't be confident and wrong.",
+            "Never ask your troops to do something you're not willing to do.",
+            "The only rules are the ones dictated by the laws of physics. Everything else is a recommendation.",
+            "When hiring, look for people with the right attitude. Skills can be taught. Attitude requires a brain transplant.",
+            "Whenever there are problems to solve, don't just meet with your managers. Do a skip level, where you meet with the right below your managers."
+        ],
+    "model": "/opt/bge-base-en-v1.5-q4_0.gguf", 
+    "batch_size": 6,
+    "max_len": 64,
+    "normalise": true
+}
+
+
+### More relistic example 
+POST {{baseUriEmbedding}}
+Content-Type: application/json
+
+{
+    "sent": [
+            "hyper-v"
+        ],
+    "model": "/opt/bge-base-en-v1.5-q4_0.gguf", 
+    "batch_size": 6,
+    "max_len": 64,
+    "normalise": true
+}

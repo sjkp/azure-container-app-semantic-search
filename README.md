@@ -1,13 +1,13 @@
-# Azure Container Apps - Infrastructure Template 
+# Azure Container Apps - Semantic Search Backend
 
-Use this template to create an Azure Container App repository that configures an Azure environment ready for use for hosting docker containers. It uses the subscription deploy scope, so you need a service principal with access to the subscription where you want to deploy the resource group. 
+Use this template to create an Azure Container App Semantic Search backend using [qdrant](https://qdrant.tech) as vector database and https://github.com/sjkp/blitz-embed/tree/master as embedding endpoint. 
 
-Besides Azure Container Apps, it deploys a storage account and an Azure Key Vault, and log analytics workspace. 
+Besides Azure Container Apps, the template deploys a storage account and log analytics workspace. 
 
 Things you want to modify
 | Location | Usage |
 | - | - |
-|.github/workflows/deploy.yaml| For the github action to work you must set the following Github action secrets: `AZURE_CREDENTIALS` (see below how to create a value, it is the full json response of the `az ad sp` command that you should use)  `AZURE_SUBSCRIPTION` (this should contain the subscription Id). *If you need an Azure Container App that uses an Azure file share mount you can use the template `main-with-storage.bicep` instead of just main in `deploy.yaml`*
+|.github/workflows/deploy.yaml| For the github action to work you must set the following Github action secrets: `AZURE_CREDENTIALS` (see below how to create a value, it is the full json response of the `az ad sp` command that you should use)  `AZURE_SUBSCRIPTION` (this should contain the subscription Id). 
 | infrastructure/params.json | You can change the `location` of the resource group (all resource are deployed to same location) and the `appName` in here, `appName` is used to generate the name of all the resources and the resource group. You can also change which `containerImage` that you want deployed, it defaults to nginx |
 
 
@@ -27,3 +27,7 @@ When generating your credentials (in this example we store in a secret named AZU
 az ad sp create-for-rbac --name "{sp-name}" --sdk-auth --role contributor --scopes /subscriptions/{subscription-id}
 ```
 Note: the `sp-name` must be a subdomain of your tenant name, e.g. `ghaction.<your-tenant>.onmicrosoft.com`
+
+
+## Testing  
+You can use the included `test.http` file to test the endpoints. Replace the apiKey and baseUri and baseUriEmbedding with your endpoints. The API key can be found in the environment variables section of the embedding container app, as it is generated dynamically during the deployment.

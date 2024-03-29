@@ -20,6 +20,6 @@ jobs:
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
         scope: subscription
         region: northeurope
-        template: ./infrastructure/main-with-storage.bicep
+        template: ./infrastructure/main.bicep
         parameters: infrastructure/params.json
         failOnStdErr: false

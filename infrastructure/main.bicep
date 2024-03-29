@@ -46,12 +46,10 @@ module aca 'aca-with-storage-mount.bicep' = {
   scope: rg
   name: 'azurecontainer'
   params: {
-    lawClientId: logs.outputs.clientId
-    lawClientSecret: logs.outputs.clientSecret
+    lawname: logs.outputs.name
     location: location
     name: appName
     fileshareName: fileshareName
-    storageAccountKey: storage.outputs.storageAccountKey
-    storageAccountName: storageAccountName
+    storageAccountName: storage.outputs.storageAccountName
   }
 }
