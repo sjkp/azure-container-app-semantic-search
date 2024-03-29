@@ -3,24 +3,19 @@
 param name string
 param location string
 param lawClientId string
+@secure()
 param lawClientSecret string
 
-@description('Specifies the docker container image to deploy.')
-param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
-
-@description('Specifies the container port.')
-param targetPort int = 80
-
 @description('Number of CPU cores the container can use. Can be with a maximum of two decimals.')
-param cpuCore string = '0.5'
+param cpuCore string = '0.25'
 
 @description('Amount of memory (in gibibytes, GiB) allocated to the container up to 4GiB. Can be with a maximum of two decimals. Ratio with CPU cores must be equal to 2.')
-param memorySize string = '1'
+param memorySize string = '0.5'
 
 @description('Minimum number of replicas that will be deployed')
 @minValue(0)
 @maxValue(25)
-param minReplicas int = 1
+param minReplicas int = 0
 
 @description('Maximum number of replicas that will be deployed')
 @minValue(0)
@@ -50,10 +45,8 @@ resource env 'Microsoft.App/managedEnvironments@2022-03-01'= {
 var storageName = 'acastorage'
 
 resource envStorage 'Microsoft.App/managedEnvironments/storages@2022-03-01' = {
-  name: 'containerapp-env-${name}/${storageName}'
-  dependsOn: [
-    env
-  ]
+  parent: env
+  name: storageName
   properties: {
     azureFile: {
       accessMode: 'ReadWrite'
@@ -64,9 +57,9 @@ resource envStorage 'Microsoft.App/managedEnvironments/storages@2022-03-01' = {
   }
 }
 
-
-resource containerApp 'Microsoft.App/containerApps@2022-01-01-preview' = {
-  name: 'container-app-${name}'
+// qdrant container
+resource containerApp 'Microsoft.App/containerApps@2023-11-02-preview' = {
+  name: 'container-app-${name}-qdrant'
   dependsOn: [
     envStorage
   ]
@@ -75,8 +68,16 @@ resource containerApp 'Microsoft.App/containerApps@2022-01-01-preview' = {
     managedEnvironmentId: env.id    
     configuration: {      
       ingress: {
+        additionalPortMappings: [
+          {
+            exposedPort: 6334
+            external: true
+            targetPort: 6334
+          }
+        ]
         external: true
-        targetPort: targetPort
+        targetPort: 6333
+        exposedPort: 6333
         allowInsecure: false
         traffic: [
           {
@@ -96,18 +97,59 @@ resource containerApp 'Microsoft.App/containerApps@2022-01-01-preview' = {
       ]      
       containers: [
         {          
-          name: 'container-app-${name}'
-          image: containerImage          
+          name: 'container-app-${name}-qdrant'
+          image: 'qdrant/qdrant:latest'          
           resources: {
             cpu: json(cpuCore)
             memory: '${memorySize}Gi'
           }
           volumeMounts: [
             {
-              mountPath: '/usr/share/nginx/html/'
+              mountPath: '/qdrant/storage'
               volumeName: 'externalstorage'
             }
           ]
+        }
+      ]
+      scale: {
+        minReplicas: minReplicas
+        maxReplicas: maxReplicas
+      }
+    }    
+  }
+}
+
+
+resource containerApp2 'Microsoft.App/containerApps@2023-11-02-preview' = {
+  name: 'container-app-${name}-embed'
+  dependsOn: [
+    envStorage
+  ]
+  location: location  
+  properties: {
+    managedEnvironmentId: env.id    
+    configuration: {      
+      ingress: {       
+        external: true
+        targetPort: 8080        
+        allowInsecure: false
+        traffic: [
+          {
+            latestRevision: true
+            weight: 100            
+          }
+        ]
+      }
+    }
+    template: {           
+      containers: [
+        {          
+          name: 'container-app-${name}-embed'
+          image: 'sjkp/blitz-embed:v1'          
+          resources: {
+            cpu: json(cpuCore)
+            memory: '${memorySize}Gi'
+          }          
         }
       ]
       scale: {
