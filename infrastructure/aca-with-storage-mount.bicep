@@ -148,11 +148,17 @@ resource containerApp2 'Microsoft.App/containerApps@2023-11-02-preview' = {
       containers: [
         {          
           name: 'ca-${name}-embed'
-          image: 'sjkp/blitz-embed:v1'          
+          image: 'ghcr.io/sjkp/blitz-embed:latest'          
           resources: {
             cpu: json(cpuCore)
             memory: '${memorySize}Gi'
-          }          
+          }
+          env: [
+            {
+              name: 'API_KEY'
+              value: apikey
+            }
+          ]          
         }
       ]
       scale: {
